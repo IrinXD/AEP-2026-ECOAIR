@@ -1,16 +1,8 @@
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { LayoutDashboard, Map as MapIcon, Leaf } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
-
-const COLORS = {
-  background: '#0F172A',
-  surface: '#1E293B',
-  primary: '#0D9488',
-  text: '#F8FAFC',
-  textMuted: '#64748B',
-  tabInactive: '#475569',
-};
+import { COLORS } from '../utils/constants';
 
 export default function TabLayout() {
   return (
@@ -21,7 +13,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarStyle: {
             backgroundColor: COLORS.surface,
-            borderTopColor: '#334155',
+            borderTopColor: COLORS.cardBorder,
             borderTopWidth: 1,
             height: 88,
             paddingBottom: 28,
@@ -32,8 +24,8 @@ export default function TabLayout() {
             shadowOpacity: 0.3,
             shadowRadius: 8,
           },
-          tabBarActiveTintColor: COLORS.primary,
-          tabBarInactiveTintColor: COLORS.tabInactive,
+          tabBarActiveTintColor: COLORS.primaryLight,
+          tabBarInactiveTintColor: COLORS.textMuted,
           tabBarLabelStyle: {
             fontSize: 11,
             fontWeight: '600',
@@ -44,27 +36,27 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Dashboard',
+            title: 'Analytics',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="analytics" size={size} color={color} />
+              <LayoutDashboard size={size} color={color} />
             ),
           }}
         />
         <Tabs.Screen
           name="map"
           options={{
-            title: 'Mapa',
+            title: 'Geospatial',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="map" size={size} color={color} />
+              <MapIcon size={size} color={color} />
             ),
           }}
         />
         <Tabs.Screen
           name="recommendation"
           options={{
-            title: 'IA',
+            title: 'AI Intel',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="sparkles" size={size} color={color} />
+              <Leaf size={size} color={color} />
             ),
           }}
         />

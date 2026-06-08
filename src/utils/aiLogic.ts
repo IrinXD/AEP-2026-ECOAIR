@@ -22,21 +22,16 @@ export interface RecommendationFactor {
   description: string;
 }
 
-/**
- * Análise de Risco - Avalia dados da OpenWeather (AQI, PM2.5, CO)
- * e retorna um alerta em texto se os níveis estiverem prejudiciais.
- */
 export function analyzeRisk(
   aqi: number,
   components: PollutionComponents
 ): RiskAnalysis {
   const { pm2_5, co, no2, o3 } = components;
 
-  // Limites baseados nas diretrizes da OMS
-  const pm25Dangerous = pm2_5 > 35; // µg/m³
-  const coDangerous = co > 10000; // µg/m³
-  const no2Dangerous = no2 > 200; // µg/m³
-  const o3Dangerous = o3 > 180; // µg/m³
+  const pm25Dangerous = pm2_5 > 35;
+  const coDangerous = co > 10000;
+  const no2Dangerous = no2 > 200;
+  const o3Dangerous = o3 > 180;
 
   const dangerCount = [
     pm25Dangerous,
@@ -48,51 +43,51 @@ export function analyzeRisk(
   if (aqi >= 5 || dangerCount >= 3) {
     return {
       level: 'critical',
-      title: '⚠️ Alerta Crítico',
-      message: `Qualidade do ar extremamente perigosa! PM2.5: ${pm2_5.toFixed(1)} µg/m³, CO: ${(co / 1000).toFixed(1)} mg/m³. Evite atividades ao ar livre. Este local é candidato prioritário para instalação de biorreatores.`,
+      title: 'Alerta Crítico',
+      message: `Risco iminente. PM2.5: ${pm2_5.toFixed(1)} µg/m³, CO: ${(co / 1000).toFixed(1)} mg/m³. Local prioritário para biorreatores.`,
       color: '#DC2626',
-      icon: 'alert-circle',
+      icon: 'alert-triangle',
     };
   }
 
   if (aqi >= 4 || dangerCount >= 2) {
     return {
       level: 'high',
-      title: '🔴 Risco Alto',
-      message: `Níveis de poluição acima do recomendável. PM2.5: ${pm2_5.toFixed(1)} µg/m³. Grupos sensíveis devem limitar exposição. Recomenda-se avaliação para árvore líquida.`,
+      title: 'Risco Alto',
+      message: `Níveis prejudiciais. PM2.5: ${pm2_5.toFixed(1)} µg/m³. Avaliação para árvore líquida sugerida.`,
       color: '#EF4444',
-      icon: 'warning',
+      icon: 'alert-circle',
     };
   }
 
   if (aqi >= 3 || dangerCount >= 1) {
     return {
       level: 'moderate',
-      title: '🟡 Risco Moderado',
-      message: `Qualidade do ar moderada. PM2.5: ${pm2_5.toFixed(1)} µg/m³. Pessoas sensíveis podem sentir desconforto. Monitoramento contínuo recomendado.`,
+      title: 'Risco Moderado',
+      message: `Qualidade do ar moderada. Sensíveis podem sentir desconforto.`,
       color: '#F59E0B',
-      icon: 'information-circle',
+      icon: 'info',
     };
   }
 
   return {
     level: 'low',
-    title: '🟢 Ar Saudável',
-    message: `Qualidade do ar dentro dos padrões aceitáveis. PM2.5: ${pm2_5.toFixed(1)} µg/m³. Condições favoráveis para atividades ao ar livre.`,
+    title: 'Ar Saudável',
+    message: `Padrões aceitáveis. PM2.5: ${pm2_5.toFixed(1)} µg/m³.`,
     color: '#22C55E',
-    icon: 'checkmark-circle',
+    icon: 'check-circle',
   };
 }
 
 /**
- * Simula a densidade de trânsito baseada em hora do dia e localização.
- * Em um cenário real, isso viria de uma API de tráfego.
+ * Mocks traffic density (0-100) using time distribution and spatial coordinates
+ * Peak hours: 7-9h, 17-19h (80 base)
+ * Spatial variation: sinusoidal mapping to mimic urban clusters
  */
 function simulateTrafficDensity(lat: number, lon: number): number {
   const hour = new Date().getHours();
   let baseDensity = 30;
 
-  // Horários de pico
   if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
     baseDensity = 80;
   } else if (hour >= 10 && hour <= 16) {
@@ -103,14 +98,12 @@ function simulateTrafficDensity(lat: number, lon: number): number {
     baseDensity = 15;
   }
 
-  // Variação baseada em coordenadas (simulando áreas urbanas)
   const urbanFactor = Math.abs(Math.sin(lat * 10) * Math.cos(lon * 10));
   return Math.min(100, baseDensity + urbanFactor * 20);
 }
 
 /**
- * Simula o índice de área verde baseado na localização.
- * Em um cenário real, isso viria de dados de sensoriamento remoto.
+ * Mocks green area index (0-100) using spatial seeding
  */
 function simulateGreenAreaIndex(lat: number, lon: number): number {
   const seed = Math.abs(Math.sin(lat * 100) + Math.cos(lon * 100));
@@ -118,8 +111,8 @@ function simulateGreenAreaIndex(lat: number, lon: number): number {
 }
 
 /**
- * Sistema de Recomendação - Calcula o Score de Necessidade de Árvore Líquida.
- * Cruza o AQI atual com variáveis simuladas para gerar um score 0-100%.
+ * Calculates a probabilistic score [0-100] representing the necessity of a Liquid Tree deployment.
+ * Math Formula: S = (AQI_norm * 0.40) + (PM2.5_norm * 0.25) + (Traffic * 0.20) + (GreenDeficit * 0.15)
  */
 export function calculateRecommendationScore(
   aqi: number,
@@ -130,19 +123,11 @@ export function calculateRecommendationScore(
   const trafficDensity = simulateTrafficDensity(lat, lon);
   const greenAreaIndex = simulateGreenAreaIndex(lat, lon);
 
-  // Fator 1: Qualidade do Ar (peso 40%)
-  const aqiFactor = ((aqi - 1) / 4) * 100; // Normaliza AQI (1-5) para 0-100
-
-  // Fator 2: Nível de PM2.5 (peso 25%)
+  const aqiFactor = ((aqi - 1) / 4) * 100;
   const pm25Factor = Math.min(100, (components.pm2_5 / 75) * 100);
-
-  // Fator 3: Densidade de Trânsito (peso 20%)
   const trafficFactor = trafficDensity;
-
-  // Fator 4: Déficit de Área Verde (peso 15%)
   const greenDeficitFactor = 100 - greenAreaIndex;
 
-  // Cálculo do Score Ponderado
   const score = Math.round(
     aqiFactor * 0.4 +
     pm25Factor * 0.25 +
@@ -158,37 +143,37 @@ export function calculateRecommendationScore(
       name: 'Qualidade do Ar (AQI)',
       value: Math.round(aqiFactor),
       weight: 40,
-      description: `Índice AQI ${aqi}/5 — ${aqi >= 4 ? 'Nível prejudicial detectado' : aqi >= 3 ? 'Nível moderado' : 'Dentro do aceitável'}`,
+      description: `Índice AQI ${aqi}/5`,
     },
     {
-      name: 'Material Particulado (PM2.5)',
+      name: 'Poluição PM2.5',
       value: Math.round(pm25Factor),
       weight: 25,
-      description: `${components.pm2_5.toFixed(1)} µg/m³ — ${components.pm2_5 > 35 ? 'Acima do limite OMS' : 'Dentro dos padrões'}`,
+      description: `${components.pm2_5.toFixed(1)} µg/m³`,
     },
     {
       name: 'Densidade de Trânsito',
       value: Math.round(trafficFactor),
       weight: 20,
-      description: `${trafficDensity.toFixed(0)}% de ocupação — ${trafficDensity > 60 ? 'Tráfego intenso' : 'Tráfego moderado'}`,
+      description: `${trafficDensity.toFixed(0)}%`,
     },
     {
       name: 'Déficit de Área Verde',
       value: Math.round(greenDeficitFactor),
       weight: 15,
-      description: `Cobertura verde: ${greenAreaIndex.toFixed(0)}% — ${greenAreaIndex < 30 ? 'Área com pouca vegetação' : 'Vegetação presente'}`,
+      description: `Cobertura verde: ${greenAreaIndex.toFixed(0)}%`,
     },
   ];
 
   let recommendation: string;
   if (clampedScore > 85) {
-    recommendation = '🔴 PRIORIDADE MÁXIMA: Este local apresenta condições críticas que justificam a instalação imediata de um biorreator de microalgas (árvore líquida). A combinação de alta poluição, tráfego intenso e déficit de área verde torna este ponto ideal para a tecnologia.';
+    recommendation = 'PRIORIDADE MÁXIMA: Alta poluição combinada a déficit arbóreo exige biorreator de emergência.';
   } else if (clampedScore > 75) {
-    recommendation = '🟠 RECOMENDADO: A análise indica que este local se beneficiaria significativamente da instalação de uma árvore líquida. Os indicadores ambientais mostram necessidade de intervenção para melhorar a qualidade do ar.';
+    recommendation = 'RECOMENDADO: Níveis persistentes de degradação atmosférica sugerem intervenção tecnológica viável.';
   } else if (clampedScore > 50) {
-    recommendation = '🟡 MONITORAR: Os indicadores sugerem um nível moderado de necessidade. Recomenda-se monitoramento contínuo e reavaliação periódica. A instalação pode ser considerada em um plano de expansão futuro.';
+    recommendation = 'MONITORAR: Parâmetros moderados. Uma árvore líquida pode atuar de forma preventiva na região.';
   } else {
-    recommendation = '🟢 BAIXA PRIORIDADE: As condições atuais não justificam a instalação imediata de um biorreator neste local. O ar está dentro de padrões aceitáveis e há cobertura verde suficiente.';
+    recommendation = 'BAIXA PRIORIDADE: Fatores ambientais estabilizados e saudáveis.';
   }
 
   return {
