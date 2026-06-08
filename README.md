@@ -1,7 +1,7 @@
 # Bem-vindo ao EcoAir. Projeto AEP feita por:
-#Gabriel Andrade 
-#Pedro Boeing
-#Thiago Nunes
+Gabriel Andrade 
+Pedro Boeing
+Thiago Nunes
 
 Este é um projeto [Expo](https://expo.dev) criado com [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
