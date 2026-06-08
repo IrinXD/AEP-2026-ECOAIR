@@ -69,3 +69,20 @@ A saída clamped (travada) entre `[0, 100]` gera uma _Recommendation_:
 - **`> 75%` (Recomendado):** Zona de implantação ideal do biorreator.
 - **`> 50%` (Monitorar):** Implantação de longo prazo.
 - **`<= 50%` (Baixa Prioridade):** Sustentável no modelo atual.
+
+
+## 4. Modelagem de Estado (State Machine)
+
+Para garantir a resiliência da aplicação e evitar comportamentos inesperados na interface, o ciclo de vida das requisições no EcoAir foi modelado seguindo o padrão de Máquina de Estados Finitos (Finite State Machine - FSM). 
+
+O estado da tela transita apenas em caminhos unidirecionais previsíveis, sendo gerenciado de forma reativa pela arquitetura do aplicativo (via *Hooks* do React e *Zustand*):
+
+1. **`IDLE` (Ocioso):** Estado inicial. O aplicativo aguarda a ação do usuário na barra de busca ou a permissão de acesso ao GPS do dispositivo.
+2. **`FETCHING_LOCATION`:** Transição ativada imediatamente ao solicitar a busca de uma nova cidade ou ao capturar a geolocalização atual.
+3. **`FETCHING_DATA`:** O aplicativo bloqueia novas requisições na interface (prevenindo *double-clicks* ou chamadas duplicadas) e realiza a requisição HTTP para a API do OpenWeather.
+4. **`CALCULATING_IA`:** Dados de poluição recebidos com sucesso. A interface exibe um indicador de carregamento enquanto aguarda o processamento matemático do *Score de Recomendação* na CPU.
+5. **`SUCCESS`:** O estado global é populado com os nós de dados da qualidade do ar (`airQuality`) e a recomendação final da IA (`recommendation`). A UI é liberada para renderizar os *Bento Cards*.
+6. **`ERROR`:** Estado de *fallback* ativado caso a API falhe (ex: ausência de internet) ou a cidade buscada não exista. Dispara um alerta visual para o usuário e permite o retorno seguro ao estado `IDLE`.
+
+**Diagrama lógico de transição de estado na interface:**
+`[IDLE] -> [FETCHING_LOCATION] -> [FETCHING_DATA] -> [CALCULATING_IA] -> [SUCCESS | ERROR]`
